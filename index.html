@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IUPAC Lab Escape</title>
+    <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="8" fill="%23eef6f3"/><path d="M20 44h24M24 20v18m16-18v18M24 20h16" stroke="%2320394f" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="45" r="10" fill="%2338b48b"/></svg>' />
+    <link rel="stylesheet" href="styles.css?v=7" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar" aria-label="สถานะเกม">
+        <div>
+          <p class="eyebrow">Carboxylic Acid Escape Room</p>
+          <h1>IUPAC Lab Escape</h1>
+        </div>
+        <div class="status-grid hidden">
+          <div class="status-item">
+            <span>คะแนน</span>
+            <strong id="score">0</strong>
+          </div>
+          <div class="status-item">
+            <span>หัวใจ</span>
+            <strong id="lives">5</strong>
+          </div>
+          <div class="status-item">
+            <span>ด่านผ่าน</span>
+            <strong id="keys">0/3</strong>
+          </div>
+        </div>
+      </header>
+
+      <main id="app" class="stage" aria-live="polite"></main>
+
+      <footer class="footer">
+        <button class="ghost-button" type="button" id="homeButton">หน้าแรก</button>
+        <button class="ghost-button" type="button" id="dataButton">คลังข้อมูล PubChem</button>
+        <button class="ghost-button" type="button" id="creditButton">เครดิตและ AI Ethics</button>
+      </footer>
+    </div>
+
+    <script src="app.js?v=7"></script>
+  </body>
+</html>
