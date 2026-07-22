@@ -108,7 +108,7 @@ h3 {
 
 .status-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(82px, 1fr));
+  grid-template-columns: repeat(2, minmax(96px, 1fr));
   gap: 8px;
   min-width: min(430px, 48vw);
 }
@@ -138,6 +138,30 @@ h3 {
   color: var(--yellow);
   font-size: 1.1rem;
   font-weight: 950;
+}
+
+.mission-status {
+  grid-template-columns: minmax(128px, 0.95fr) minmax(170px, 1.05fr);
+}
+
+.mission-status .lives-card strong {
+  color: #e11d48;
+  font-size: clamp(1.25rem, 2.2vw, 1.65rem);
+  letter-spacing: 2px;
+}
+
+.compact-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.compact-stats div {
+  min-width: 0;
+}
+
+.home-score-status .status-item strong {
+  color: var(--blue);
 }
 
 .stage {
@@ -327,7 +351,8 @@ h3 {
 }
 
 .rule-grid,
-.credit-grid {
+.credit-grid,
+.help-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
@@ -336,6 +361,7 @@ h3 {
 
 .rule-grid div,
 .credit-grid div,
+.help-grid article,
 .summary-grid div {
   display: grid;
   gap: 4px;
@@ -346,13 +372,33 @@ h3 {
 }
 
 .rule-grid strong,
-.credit-grid strong {
+.credit-grid strong,
+.help-grid strong {
   color: var(--yellow);
 }
 
 .rule-grid span,
-.credit-grid span {
+.credit-grid span,
+.help-grid span {
   color: var(--muted);
+}
+
+.help-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.help-grid article {
+  align-content: start;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.help-grid strong {
+  color: var(--blue);
+  font-size: 1.04rem;
+}
+
+.help-grid span {
+  line-height: 1.6;
 }
 
 .map-screen {
@@ -467,6 +513,13 @@ h3 {
 .boss-card {
   border-color: rgba(255, 95, 170, 0.38);
   background: linear-gradient(160deg, rgba(255, 244, 251, 0.98), rgba(241, 248, 255, 0.92));
+}
+
+.boss-card p span {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-weight: 900;
 }
 
 .boss-title-card {
@@ -1057,6 +1110,7 @@ sub {
 
   .rule-grid,
   .credit-grid,
+  .help-grid,
   .summary-grid {
     grid-template-columns: 1fr;
   }
@@ -1082,6 +1136,59 @@ sub {
 @media (max-width: 620px) {
   .app-shell {
     padding: 8px;
+  }
+
+  .topbar.in-mission {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .topbar.in-mission .topbar-brand {
+    display: none;
+  }
+
+  .topbar.in-mission .mission-status {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .topbar.in-mission .status-item {
+    min-height: 48px;
+    padding: 6px 8px;
+    border-radius: 12px;
+  }
+
+  .topbar.in-mission .status-item span {
+    font-size: 0.68rem;
+  }
+
+  .topbar.in-mission .lives-card {
+    text-align: left;
+  }
+
+  .topbar.in-mission .lives-card strong {
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+  }
+
+  .topbar.in-mission .compact-stats {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    text-align: right;
+  }
+
+  .topbar.in-mission .compact-stats div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .topbar.in-mission .compact-stats strong {
+    font-size: 0.92rem;
   }
 
   .game-screen {

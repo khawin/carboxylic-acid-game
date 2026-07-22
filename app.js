@@ -133,6 +133,10 @@ const state = {
   playerGender: "male",
   learning: null,
   summary: null,
+  missionActive: false,
+  helpReturnScreen: null,
+  lastScore: 0,
+  bestScore: 0,
   timerId: null,
 };
 
@@ -172,6 +176,8 @@ function resetGame() {
   state.pendingReward = null;
   state.modal = null;
   state.summary = null;
+  state.missionActive = true;
+  state.helpReturnScreen = null;
   state.roundPlan = {
     builder: stagePools.builder.map((id, index) => ({ compound: compoundById[id], promptType: index % 3 === 1 ? "condensed" : "bond" })),
     choice: stagePools.choice.map((id, index) => ({ compound: compoundById[id], promptType: index % 3 === 2 ? "condensed" : "bond" })),
@@ -183,10 +189,28 @@ function resetGame() {
 
 function updateStatus() {
   const statusGrid = document.querySelector(".status-grid");
-  if (statusGrid) statusGrid.classList.toggle("hidden", !state.roundPlan);
-  scoreEl.textContent = String(Math.max(0, state.score));
-  livesEl.textContent = "♥".repeat(Math.max(0, state.lives)) || "0";
-  keysEl.textContent = `${state.completedStages.size}/3`;
+  const topbar = document.querySelector(".topbar");
+  if (!statusGrid) return;
+  topbar?.classList.toggle("in-mission", state.missionActive);
+  topbar?.classList.toggle("home-stats-mode", state.screen === "home" && !state.missionActive);
+  if (state.missionActive) {
+    statusGrid.className = "status-grid mission-status";
+    statusGrid.innerHTML = `
+      <div class="status-item lives-card"><span>หัวใจ</span><strong id="lives">${"♥".repeat(Math.max(0, state.lives)) || "0"}</strong></div>
+      <div class="status-item compact-stats">
+        <div><span>คะแนน</span><strong id="score">${Math.max(0, state.score)}</strong></div>
+        <div><span>ด่านผ่าน</span><strong id="keys">${state.completedStages.size}/3</strong></div>
+      </div>
+    `;
+  } else if (state.screen === "home") {
+    statusGrid.className = "status-grid home-score-status";
+    statusGrid.innerHTML = `
+      <div class="status-item"><span>คะแนนล่าสุด</span><strong>${Math.max(0, state.lastScore)}</strong></div>
+      <div class="status-item"><span>คะแนนสูงสุด</span><strong>${Math.max(0, state.bestScore)}</strong></div>
+    `;
+  } else {
+    statusGrid.className = "status-grid hidden";
+  }
 }
 
 function setScreen(screen) {
@@ -211,6 +235,7 @@ function render() {
     summary: renderSummary,
     data: renderData,
     credits: renderCredits,
+    help: renderHelp,
   };
   routes[state.screen]();
   bindModalActions();
@@ -265,15 +290,16 @@ function renderIntro() {
       </div>
       <div class="dialogue-panel">
         <p class="game-kicker">Mission Briefing</p>
-        <h2>คุณคือนักเรียน ม.6 ที่ต้องปลดล็อกแล็บกรดอินทรีย์</h2>
-        <p class="lead">ระบบแล็บจะเปิดทางออกเมื่อคุณผ่าน 3 ด่านฝึกเรียกชื่อกรดคาร์บอกซิลิก และชนะ Final Boss “ดร.ซู”</p>
+        <h2>คุณคือนักเรียน ม.6 ที่ต้องออกจากแล็บกรดอินทรีย์</h2>
+        <p class="lead">คุณจะออกจากแล็บนี้ได้ก็ต่อเมื่อชนะในด่าน Final Boss “ดร.ซู”</p>
         <div class="rule-grid">
-          <div><strong>หัวใจ</strong><span>มี 5 หลอด ตอบผิดเสียหัวใจ</span></div>
-          <div><strong>ด่าน</strong><span>เลือกเล่นด่าน 1-3 ได้อิสระ</span></div>
-          <div><strong>บอส</strong><span>เข้าได้ทันที แต่จะยากมากถ้ายังไม่อ่อนแอ</span></div>
+          <div><strong>หัวใจ</strong><span>มี 5 หัวใจ ตอบผิดเสียหัวใจ และแพ้หากหัวใจหมด</span></div>
+          <div><strong>ด่าน</strong><span>เลือกเล่นด่าน 1-3 ได้อิสระ เล่นผ่านจะได้รางวัลที่ทำให้บอสอ่อนแอลง</span></div>
+          <div><strong>บอส</strong><span>เข้าได้ทันที แต่จะยากมากถ้ายังไม่ได้เล่นด่านอื่น ๆ ก่อน</span></div>
         </div>
         <button class="game-button primary" type="button" data-action="map">เปิดแผนที่แล็บ</button>
       </div>
+      ${state.modal ? renderModal() : ""}
     </section>
   `;
   bind("[data-action='map']", () => setScreen("map"));
@@ -338,7 +364,6 @@ function renderLearningLesson(step, compound) {
           <span>ชื่อกรดสายอิ่มตัวลงท้าย anoic acid</span>
         </div>
         <div class="hero-actions">
-          <button class="game-button secondary" type="button" data-learn="home">กลับหน้าแรก</button>
           <button class="game-button primary" type="button" data-learn="next">ถัดไป: ลองทำโจทย์</button>
         </div>
       </article>
@@ -402,7 +427,7 @@ function renderMap() {
         <div>
           <p class="game-kicker">Lab Map</p>
           <h2>เลือกด่านที่จะทำภารกิจ</h2>
-          <p class="lead">เล่นด่าน 1-3 เพื่อเลือกพลังลดความโหดของบอส หรือท้าดวล ดร.ซู ตั้งแต่ต้นก็ได้</p>
+          <p class="lead">แนะนำให้เล่นด่าน 1-3 ก่อนเพื่อสร้าง debuff ให้บอสอ่อนแอลง</p>
         </div>
       </div>
       <div class="stage-grid">
@@ -712,7 +737,8 @@ function finishBossRound(correct) {
   } else {
     const pass = state.boss.correct / state.boss.rounds.length >= 0.7;
     const bonus = pass ? state.boss.timeLeft * 2 : 0;
-    state.score += bonus;
+    const noDebuffBonus = pass && ["damage", "time", "rounds"].every((id) => !state.bossModifiers?.[id]) ? 10000 : 0;
+    state.score += bonus + noDebuffBonus;
     endGame(pass ? "ชนะ ดร.ซู และออกจากแล็บสำเร็จ" : "คะแนนบอสยังไม่ถึง 70%", pass);
   }
 }
@@ -757,6 +783,21 @@ function openRewardModal(message) {
 }
 
 function renderModal() {
+  if (state.modal.type === "homeConfirm") {
+    return `
+      <div class="modal-backdrop" role="dialog" aria-modal="true">
+        <div class="game-modal warning-modal">
+          <p class="game-kicker">ยืนยันออกจากภารกิจ</p>
+          <h2>กลับหน้าแรกตอนนี้ไหม?</h2>
+          <p class="lead">ถ้ากลับหน้าแรก ภารกิจที่กำลังดำเนินอยู่จะจบทันที และคะแนนในรอบนี้จะไม่ถูกนับเป็นคะแนนล่าสุดหรือคะแนนสูงสุด</p>
+          <div class="hero-actions">
+            <button class="game-button secondary" type="button" data-modal="close">เล่นต่อ</button>
+            <button class="game-button boss" type="button" data-modal="abandon">ยืนยันกลับหน้าแรก</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
   if (state.modal.type === "zoom") {
     return `
       <div class="modal-backdrop" role="dialog" aria-modal="true">
@@ -809,7 +850,32 @@ function renderModal() {
 }
 
 function closeModal() {
+  const wasHomeConfirm = state.modal?.type === "homeConfirm";
   state.modal = null;
+  render();
+  if (wasHomeConfirm) resumeActiveTimer();
+}
+
+function abandonMissionToHome() {
+  clearTimer();
+  state.screen = "home";
+  state.score = 0;
+  state.lives = 5;
+  state.correct = 0;
+  state.attempted = 0;
+  state.completedStages = new Set();
+  state.currentStage = null;
+  state.builder = null;
+  state.choice = null;
+  state.match = null;
+  state.boss = null;
+  state.bossModifiers = null;
+  state.pendingReward = null;
+  state.modal = null;
+  state.summary = null;
+  state.roundPlan = null;
+  state.missionActive = false;
+  state.helpReturnScreen = null;
   render();
 }
 
@@ -852,13 +918,15 @@ function bossConfigText() {
 }
 
 function bossStatusText() {
-  const unlocked = state.completedStages.size === 3;
-  const activeRewards = ["damage", "time", "rounds"].filter((id) => state.bossModifiers?.[id]).length;
-  return `${unlocked ? "พร้อมลุย" : "เข้าได้ทันทีแต่มีคำเตือน"} · ${bossConfigText()} · debuff ${activeRewards}/3`;
+  const config = bossConfig();
+  return `โจทย์ท้าทาย สุ่มวิธีเล่น และเวลาที่จำกัด<br><span>สถานะบอสตอนนี้ จำนวนข้อ: ${config.rounds} ข้อ เวลา: ${config.time} วินาที ผิดเสีย ${config.damage} หัวใจ</span>`;
 }
 
 function endGame(reason, won) {
   clearTimer();
+  state.missionActive = false;
+  state.lastScore = Math.max(0, state.score);
+  state.bestScore = Math.max(state.bestScore, state.lastScore);
   state.summary = { reason, won, endedAt: Date.now() };
   setScreen("summary");
 }
@@ -885,16 +953,12 @@ function renderSummary() {
         <p class="lead">${summaryAdvice(accuracy)}</p>
         <div class="hero-actions">
           <button class="game-button primary" type="button" data-action="restart">เล่นใหม่</button>
-          <button class="game-button secondary" type="button" data-action="data">คลังความรู้</button>
-          <button class="game-button quiet" type="button" data-action="credits">เครดิต</button>
         </div>
       </div>
       <img class="summary-boss" src="assets/characters/dr-su-male-ai.png" alt="ดร.ซู" />
     </section>
   `;
   bind("[data-action='restart']", resetGame);
-  bind("[data-action='data']", () => setScreen("data"));
-  bind("[data-action='credits']", () => setScreen("credits"));
 }
 
 function renderData() {
@@ -912,11 +976,11 @@ function renderData() {
             </tbody>
           </table>
         </div>
-        <button class="game-button primary" type="button" data-action="back">กลับเกม</button>
+        <button class="game-button primary" type="button" data-action="home">กลับหน้าแรก</button>
       </div>
     </section>
   `;
-  bind("[data-action='back']", () => setScreen(state.roundPlan ? "map" : "home"));
+  bind("[data-action='home']", () => setScreen("home"));
 }
 
 function renderCredits() {
@@ -937,6 +1001,60 @@ function renderCredits() {
       </div>
     </section>
   `;
+  bind("[data-action='home']", () => setScreen("home"));
+}
+
+function renderHelp() {
+  const canReturn = state.missionActive && state.helpReturnScreen;
+  app.innerHTML = `
+    <section class="game-screen help-screen">
+      <div class="page-panel">
+        <p class="game-kicker">How to Play</p>
+        <h2>วิธีเล่น IUPAC Lab Escape</h2>
+        <div class="help-grid">
+          <article>
+            <strong>ภารกิจหลัก</strong>
+            <span>คุณเป็นนักเรียน ม.6 ที่ต้องออกจากแล็บกรดอินทรีย์ เป้าหมายสุดท้ายคือชนะ Final Boss “ดร.ซู” ภายในเวลาที่กำหนดและไม่ให้หัวใจหมด</span>
+          </article>
+          <article>
+            <strong>ด่าน 1: Name Builder</strong>
+            <span>ดูสูตรโครงสร้าง แล้วต่อชื่อ IUPAC จากชิ้นส่วนคำ เน้นการนับคาร์บอนของ -COOH เป็นตำแหน่ง 1 และเลือกชื่อโซ่หลักให้ถูก</span>
+          </article>
+          <article>
+            <strong>ด่าน 2: Acid Rush</strong>
+            <span>ตอบแบบ 4 ตัวเลือกในเวลา 90 วินาที ตัวเลือกจะคล้ายกัน ต้องระวังตำแหน่งกิ่ง จำนวนกิ่ง และชื่อโซ่หลัก</span>
+          </article>
+          <article>
+            <strong>ด่าน 3: Matching Lab</strong>
+            <span>จับคู่การ์ดสูตรกับชื่อ IUPAC ให้ครบ 6 คู่ สูตรอาจเป็นสูตรโมเลกุล สูตรย่อ หรือสูตรเส้นพันธะ</span>
+          </article>
+          <article>
+            <strong>Final Boss: ดร.ซู</strong>
+            <span>เป็นด่านรวมที่สุ่มวิธีเล่น Name Builder, Acid Rush และ Matching ถ้ายังไม่เล่นด่าน 1-3 บอสจะมี 12 ข้อ เวลา 100 วินาที และตอบผิดเสีย 2 หัวใจ</span>
+          </article>
+          <article>
+            <strong>Debuff บอส</strong>
+            <span>เมื่อผ่านด่าน 1-3 จะเลือกรางวัลได้ 1 อย่างต่อด่าน: ลดดาเมจ, เพิ่มเวลาเป็น 180 วินาที, หรือลดจำนวนข้อเหลือ 9 ข้อ เลือกซ้ำไม่ได้</span>
+          </article>
+          <article>
+            <strong>โบนัสท้าทาย</strong>
+            <span>ถ้าชนะ ดร.ซู โดยไม่ใช้ debuff ใด ๆ จะได้คะแนนพิเศษ 10,000 คะแนน เหมาะสำหรับคนที่อยากท้าทายตัวเอง</span>
+          </article>
+          <article>
+            <strong>โหมดเรียนรู้</strong>
+            <span>โหมดฝึกพื้นฐานแบบ Step by Step มีใบความรู้สั้น ๆ แล้วตามด้วยโจทย์ง่าย ๆ เพื่อเตรียมตัวก่อนเล่นภารกิจหลัก</span>
+          </article>
+          <article>
+            <strong>คลังความรู้และเครดิต</strong>
+            <span>คลังความรู้รวมชื่อ สูตร และ PubChem CID สำหรับตรวจสอบข้อมูล ส่วนเครดิตบอกแหล่งที่มาของภาพ เครื่องมือ AI และหลัก AI Ethics</span>
+          </article>
+        </div>
+        <button class="game-button primary" type="button" data-action="${canReturn ? "return" : "home"}">${canReturn ? "กลับเกม" : "กลับหน้าแรก"}</button>
+      </div>
+      ${state.modal ? renderModal() : ""}
+    </section>
+  `;
+  bind("[data-action='return']", returnFromHelp);
   bind("[data-action='home']", () => setScreen("home"));
 }
 
@@ -1141,6 +1259,7 @@ function openZoomModal(src, title) {
 
 function bindModalActions() {
   bind("[data-modal='close']", closeModal);
+  bind("[data-modal='abandon']", abandonMissionToHome);
   bind("[data-modal='boss']", () => {
     state.modal = null;
     startBoss(true);
@@ -1175,8 +1294,44 @@ function formatChem(text) {
   return `<span class="chem">${escapeHtml(text).replace(/(\d+)/g, "<sub>$1</sub>")}</span>`;
 }
 
-document.querySelector("#homeButton").addEventListener("click", () => setScreen("home"));
-document.querySelector("#dataButton").addEventListener("click", () => setScreen("data"));
-document.querySelector("#creditButton").addEventListener("click", () => setScreen("credits"));
+function openHelp() {
+  if (state.missionActive && state.screen !== "help") {
+    state.helpReturnScreen = state.screen;
+  } else {
+    state.helpReturnScreen = null;
+  }
+  setScreen("help");
+}
+
+function returnFromHelp() {
+  const target = state.missionActive && state.helpReturnScreen ? state.helpReturnScreen : "home";
+  state.helpReturnScreen = null;
+  setScreen(target);
+  resumeActiveTimer();
+}
+
+function resumeActiveTimer() {
+  if (!state.missionActive) return;
+  if (state.boss && ["builder", "choice", "match"].includes(state.screen)) {
+    startBossTimer();
+    return;
+  }
+  if (state.screen === "choice" && state.choice && !state.choice.isBoss && !state.choice.answered && state.choice.timeLeft > 0) {
+    startAcidRushTimer();
+  }
+}
+
+function handleHomeButton() {
+  if (state.missionActive) {
+    clearTimer();
+    state.modal = { type: "homeConfirm" };
+    render();
+    return;
+  }
+  setScreen("home");
+}
+
+document.querySelector("#homeButton").addEventListener("click", handleHomeButton);
+document.querySelector("#helpButton").addEventListener("click", openHelp);
 
 render();
