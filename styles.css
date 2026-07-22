@@ -1282,12 +1282,21 @@ sub {
   box-shadow: var(--shadow);
 }
 
+.learning-header > div {
+  min-width: 0;
+}
+
+.learning-header h2 {
+  overflow-wrap: anywhere;
+}
+
 .learning-layout,
 .learning-quiz {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 0.85fr);
   gap: 18px;
   align-items: stretch;
+  min-width: 0;
 }
 
 .learning-card {
@@ -1296,6 +1305,7 @@ sub {
   background: rgba(255, 255, 255, 0.94);
   box-shadow: var(--shadow);
   padding: clamp(18px, 3vw, 34px);
+  min-width: 0;
 }
 
 .learning-tips {
@@ -1531,5 +1541,112 @@ td .chem {
 
   .flashcard-shell {
     min-height: 126px;
+  }
+
+  .learning-screen {
+    gap: 10px;
+    padding: 10px;
+    align-content: start;
+  }
+
+  .learning-header {
+    display: block;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .learning-header h2 {
+    font-size: clamp(1.2rem, 8vw, 1.65rem);
+    line-height: 1.18;
+  }
+
+  .learning-layout,
+  .learning-quiz {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .learning-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .learning-card .lead {
+    font-size: 0.98rem;
+    line-height: 1.6;
+  }
+
+  .learning-tips {
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .learning-tips span {
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+  }
+
+  .learning-screen .hero-actions,
+  .learning-screen .control-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .learning-screen .game-button {
+    width: 100%;
+    min-height: 52px;
+  }
+
+  .learning-screen .structure-card {
+    border-radius: 16px;
+    padding: 12px;
+  }
+
+  .learning-screen .card-title {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .learning-screen .structure-card img {
+    height: clamp(150px, 46vh, 230px);
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  .learning-screen .condensed-prompt {
+    min-height: 116px;
+    padding: 14px;
+    font-size: 0.95rem;
+  }
+
+  .learning-screen .structure-meta {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .learning-screen .instruction {
+    padding: 12px;
+    border-radius: 14px;
+    font-size: 0.98rem;
+  }
+
+  .learning-screen .kahoot-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .learning-screen .kahoot-option {
+    min-height: 66px;
+    padding: 12px;
+    border-radius: 14px;
+    font-size: 1rem;
+    align-items: center;
+  }
+
+  .learning-screen .feedback {
+    font-size: 0.95rem;
+    padding: 12px;
   }
 }

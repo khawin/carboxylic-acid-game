@@ -297,7 +297,6 @@ function renderLearning() {
           <p class="game-kicker">โหมดเรียนรู้ · Step ${learning.index + 1}/${learningSteps.length}</p>
           <h2>${step.title}</h2>
         </div>
-        <img class="mini-character" src="${playerImage()}" alt="ตัวละครผู้เล่น" />
       </div>
       ${isLesson ? renderLearningLesson(step, compound) : renderLearningQuiz(step, compound, learning)}
       ${state.modal ? renderModal() : ""}
